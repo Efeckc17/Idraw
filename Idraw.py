@@ -13,183 +13,206 @@
 # limitations under the License.
 import sys
 import math
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QToolBar, QMessageBox, QInputDialog
-from PyQt5.QtGui import QPainter, QPen, QColor, QBrush, QPainterPath
-from PyQt5.QtCore import Qt, QPointF, QTimer, pyqtSignal
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QAction, QToolBar,
+    QMessageBox, QInputDialog
+)
+from PyQt5.QtGui import QPainter, QPen, QColor, QPainterPath
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 
 def generate_heart():
     steps = []
     scale = 15
-    for i in range(0, 628, 2):
+    # Polar-based heart curve
+    for i in range(629):
         t = i / 100
-        x = 16 * math.sin(t) ** 3
+        x = 16 * (math.sin(t) ** 3)
         y = 13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t)
         steps.append((x * scale, -y * scale))
     return steps
 
-def generate_spiral():
+def generate_rose():
     steps = []
-    turns = 10
-    points = 3000
-    max_radius = 400
-    for i in range(points):
-        theta = i * turns * 2 * math.pi / points
-        r = max_radius * theta / (turns * 2 * math.pi)
-        x = r * math.cos(theta)
-        y = r * math.sin(theta)
-        steps.append((x, y))
-    return steps
-
-def generate_star():
-    steps = []
-    outer = 200
-    inner = 90
-    n = 5
-    for i in range(n * 2 + 1):
-        angle = i * math.pi / n
-        r = outer if i % 2 == 0 else inner
-        x = r * math.cos(angle)
-        y = r * math.sin(angle)
-        steps.append((x, y))
-    return steps
-
-def generate_flower():
-    steps = []
-    petals = 12
-    radius = 300
-    for i in range(petals * 2 + 1):
-        angle = i * math.pi / petals
-        r = radius * math.sin(angle)
-        x = r * math.cos(angle)
-        y = r * math.sin(angle)
-        steps.append((x, y))
-    for i in range(0, 628, 8):
-        t = i / 100
-        x = 100 * math.cos(t)
-        y = 100 * math.sin(t)
-        steps.append((x, y))
-    return steps
-
-def generate_moon():
-    steps = []
-    r = 150
-    for i in range(0, 628, 2):
-        t = i / 100
+    n = 800
+    a = 150
+    k = 4
+    # r = a*sin(k*t)
+    for i in range(n + 1):
+        t = (2 * math.pi * i) / n
+        r = a * math.sin(k * t)
         x = r * math.cos(t)
         y = r * math.sin(t)
         steps.append((x, y))
-    offset = 80
-    for i in range(0, 314, 2):
-        t = i / 100
-        x = (r - offset) * math.cos(t)
-        y = (r - offset) * math.sin(t)
+    return steps
+
+def generate_lissajous():
+    steps = []
+    n = 800
+    a1, b1 = 3, 2
+    A, B = 150, 150
+    delta = math.pi / 2
+    for i in range(n + 1):
+        t = (2 * math.pi * i) / n
+        x = A * math.sin(a1 * t + delta)
+        y = B * math.sin(b1 * t)
         steps.append((x, y))
     return steps
 
-def generate_sun():
+def generate_butterfly():
     steps = []
-    radius = 180
-    for i in range(0, 628, 2):
-        t = i / 100
-        x = radius * math.cos(t)
-        y = radius * math.sin(t)
+    n = 1000
+    # x = sin(t)*( e^(cos t) - 2 cos(4t) - sin^5(t/12) ) * scale
+    # y = cos(t)*( e^(cos t) - 2 cos(4t) - sin^5(t/12) ) * scale
+    for i in range(n + 1):
+        t = (12 * math.pi * i) / n
+        e = math.exp(math.cos(t)) - 2 * math.cos(4 * t) - (math.sin(t / 12) ** 5)
+        scale = 40
+        x = math.sin(t) * e * scale
+        y = math.cos(t) * e * scale
         steps.append((x, y))
-    for angle in range(0, 360, 10):
-        rad = math.radians(angle)
-        for r in range(radius, radius + 90, 5):
-            x = r * math.cos(rad)
-            y = r * math.sin(rad)
+    return steps
+
+def generate_hypotrochoid():
+    steps = []
+    n = 1000
+    R = 150
+    r = 60
+    d = 80
+    # Hypotrochoid param: x = (R - r)*cos(t) + d*cos(((R - r)/r)*t)
+    #                     y = (R - r)*sin(t) - d*sin(((R - r)/r)*t)
+    for i in range(n + 1):
+        t = (2 * math.pi * i) / n
+        x = (R - r) * math.cos(t) + d * math.cos(((R - r) / r) * t)
+        y = (R - r) * math.sin(t) - d * math.sin(((R - r) / r) * t)
+        steps.append((x, y))
+    return steps
+
+def generate_epitrochoid():
+    steps = []
+    n = 1000
+    R = 100
+    r = 40
+    d = 70
+    # Epitrochoid param: x = (R + r)*cos(t) - d*cos(((R + r)/r)*t)
+    #                    y = (R + r)*sin(t) - d*sin(((R + r)/r)*t)
+    for i in range(n + 1):
+        t = (2 * math.pi * i) / n
+        x = (R + r) * math.cos(t) - d * math.cos(((R + r) / r) * t)
+        y = (R + r) * math.sin(t) - d * math.sin(((R + r) / r) * t)
+        steps.append((x, y))
+    return steps
+
+def generate_spiral():
+    steps = []
+    n = 1000
+    a = 0
+    b = 3
+    # Archimedean Spiral: r = a + b*t
+    # We'll let t vary from 0 to 4*pi for a few turns
+    tmax = 4 * math.pi
+    for i in range(n + 1):
+        frac = i / n
+        t = frac * tmax
+        r = a + b * t
+        x = r * math.cos(t)
+        y = r * math.sin(t)
+        steps.append((x, y))
+    return steps
+
+def generate_deltoid():
+    steps = []
+    n = 600
+    R = 60
+    # Deltoid param: x = 2R*cos(t) + R*cos(2t), y = 2R*sin(t) - R*sin(2t)
+    for i in range(n + 1):
+        t = (2 * math.pi * i) / n
+        x = 2 * R * math.cos(t) + R * math.cos(2 * t)
+        y = 2 * R * math.sin(t) - R * math.sin(2 * t)
+        steps.append((x, y))
+    return steps
+
+def generate_astroid():
+    steps = []
+    n = 600
+    a = 120
+    # Astroid param: x = a*cos^3(t), y = a*sin^3(t)
+    for i in range(n + 1):
+        t = (2 * math.pi * i) / n
+        x = a * (math.cos(t) ** 3)
+        y = a * (math.sin(t) ** 3)
+        steps.append((x, y))
+    return steps
+
+def generate_lemniscate():
+    steps = []
+    n = 1000
+    a = 80
+    # r^2 = a^2 cos(2t). We'll plot only where cos(2t) >= 0
+    # x = r cos(t), y = r sin(t)
+    for i in range(n + 1):
+        t = 2 * math.pi * i / n
+        c = math.cos(2 * t)
+        if c >= 0:
+            r = math.sqrt(a * a * c)
+            x = r * math.cos(t)
+            y = r * math.sin(t)
             steps.append((x, y))
     return steps
 
-def generate_cloud():
+def generate_cochleoid():
     steps = []
-    ellipses = [
-        (-170, 0, 140, 90),
-        (-80, -50, 180, 110),
-        (40, 0, 140, 90),
-        (140, -50, 180, 110),
-        (250, 0, 140, 90),
-    ]
-    for ex, ey, ew, eh in ellipses:
-        for i in range(0, 628, 10):
-            t = i / 100
-            x = ew * math.cos(t)
-            y = eh * math.sin(t)
-            steps.append((ex + x, ey + y))
-    return steps
-
-def generate_tree():
-    steps = []
-    width_ = 50
-    height_ = 350
-    for y in range(0, height_, 3):
-        steps.append((-width_ / 2, -y))
-        steps.append((width_ / 2, -y))
-    foliage = 180
-    for i in range(0, 628, 2):
-        t = i / 100
-        x = foliage * math.cos(t)
-        y = foliage * math.sin(t) - height_
+    # r = a*sin(t) / t, let a=80
+    # We'll skip t=0 to avoid singularity, and go from -2*pi to 2*pi
+    a = 80
+    n = 2000
+    t_min, t_max = -2 * math.pi, 2 * math.pi
+    for i in range(n + 1):
+        frac = i / n
+        t = t_min + (t_max - t_min) * frac
+        # Avoid division by zero near t=0
+        if abs(t) < 1e-4:
+            continue
+        r = (a * math.sin(t)) / t
+        x = r * math.cos(t)
+        y = r * math.sin(t)
         steps.append((x, y))
     return steps
 
-def generate_elephant():
+def generate_fermat_spiral():
     steps = []
-    sc = 2.5
-    for i in range(0, 628, 8):
-        t = i / 100
-        x = 110 * math.cos(t)
-        y = 60 * math.sin(t)
-        steps.append((x * sc, y * sc))
-    for i in range(0, 628, 8):
-        t = i / 100
-        x = 35 * math.cos(t)
-        y = 25 * math.sin(t) - 30 * sc
-        steps.append(((110 + x) * sc, y * sc))
-    for i in range(0, 200, 4):
-        t = i / 100
-        steps.append(((150) * sc, (-30 + 60 * t) * sc))
-    return steps
-
-def generate_bird():
-    steps = []
-    sc = 2
-    for i in range(0, 628, 8):
-        t = i / 100
-        x = 50 * math.cos(t)
-        y = 25 * math.sin(t)
-        steps.append((x * sc, y * sc))
-    for i in range(0, 628, 8):
-        t = i / 100
-        x = 60 * math.cos(t)
-        y = 25 * math.sin(t)
-        steps.append(((x - 25) * sc, y * sc))
-        steps.append(((x + 25) * sc, y * sc))
-    for i in range(0, 100, 5):
-        t = i / 100
-        x = 70 + i * 0.5
-        y = 15 * math.sin(t)
-        steps.append((x * sc, y * sc))
+    # r^2 = a^2 * theta => r = a*sqrt(theta)
+    # let a=10, theta from 0..6*pi
+    a = 10
+    n = 1000
+    t_max = 6 * math.pi
+    for i in range(n + 1):
+        frac = i / n
+        th = t_max * frac
+        r = a * math.sqrt(th)
+        x = r * math.cos(th)
+        y = r * math.sin(th)
+        steps.append((x, y))
     return steps
 
 shape_map = {
     "Heart": generate_heart,
+    "Rose": generate_rose,
+    "Lissajous": generate_lissajous,
+    "Butterfly": generate_butterfly,
+    "Hypotrochoid": generate_hypotrochoid,
+    "Epitrochoid": generate_epitrochoid,
     "Spiral": generate_spiral,
-    "Star": generate_star,
-    "Flower": generate_flower,
-    "Moon": generate_moon,
-    "Sun": generate_sun,
-    "Cloud": generate_cloud,
-    "Tree": generate_tree,
-    "Elephant": generate_elephant,
-    "Bird": generate_bird
+    "Deltoid": generate_deltoid,
+    "Astroid": generate_astroid,
+    "Lemniscate": generate_lemniscate,
+    "Cochleoid": generate_cochleoid,
+    "FermatSpiral": generate_fermat_spiral
 }
 
 class DrawingWidget(QWidget):
     exit_signal = pyqtSignal()
-    def __init__(self, shape, speed, color, parent=None):
-        super(DrawingWidget, self).__init__(parent)
+    def __init__(self, shape=None, speed=20, color=QColor("white"), parent=None):
+        super().__init__(parent)
         self.shape_name = shape
         self.steps = []
         self.current_step = 0
@@ -197,8 +220,9 @@ class DrawingWidget(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_drawing)
         self.speed = speed
-        self.load_shape(shape)
-    
+        if shape:
+            self.load_shape(shape)
+
     def load_shape(self, shape):
         self.shape_name = shape
         if shape in shape_map:
@@ -210,47 +234,63 @@ class DrawingWidget(QWidget):
             self.timer.start(self.speed)
         else:
             self.timer.stop()
-    
+
+    def set_speed(self, ms):
+        self.speed = ms
+        self.timer.setInterval(self.speed)
+
+    def set_color(self, color):
+        self.pen_color = color
+
     def update_drawing(self):
         self.current_step += 1
         if self.current_step >= len(self.steps):
             self.current_step = 0
-    
         self.update()
-    
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillRect(self.rect(), QColor("black"))
+        painter.fillRect(self.rect(), Qt.black)
+
         if not self.steps:
             return
-        pen = QPen(self.pen_color, 3)
-        painter.setPen(pen)
-        painter.setBrush(QBrush(self.pen_color))
+
         cx = self.width() / 2
         cy = self.height() / 2
         path = QPainterPath()
-        if self.current_step > 0:
+
+        limit = min(self.current_step, len(self.steps))
+        if limit > 0:
             x0, y0 = self.steps[0]
             path.moveTo(cx + x0, cy + y0)
-            for i in range(1, min(self.current_step, len(self.steps))):
+            for i in range(1, limit):
                 x, y = self.steps[i]
                 path.lineTo(cx + x, cy + y)
+
+        glow = QColor(self.pen_color)
+        for i in range(5, 0, -1):
+            glow.setAlpha(60)
+            painter.setPen(QPen(glow, i * 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
             painter.drawPath(path)
-    
+
+        painter.setPen(QPen(self.pen_color, 3, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        painter.drawPath(path)
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_U:
             self.exit_signal.emit()
 
 class ScreenSaverWindow(QMainWindow):
     def __init__(self, shape, speed, color, screen, parent=None):
-        super(ScreenSaverWindow, self).__init__(parent)
+        super().__init__(parent)
         self.shape = shape
         self.speed = speed
         self.color = color
         self.screen = screen
         self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint)
         self.setGeometry(self.screen.geometry())
+
         self.drawing_widget = DrawingWidget(shape, speed, color, self)
         self.drawing_widget.exit_signal.connect(parent.exit_screen_saver_mode)
         self.setCentralWidget(self.drawing_widget)
@@ -258,71 +298,68 @@ class ScreenSaverWindow(QMainWindow):
 
 class MainWindow(QMainWindow):
     def __init__(self):
-        super(MainWindow, self).__init__()
+        super().__init__()
         self.setWindowTitle("Idraw")
         self.setGeometry(100, 100, 1200, 900)
         self.screen_saver_windows = []
+
+        self.drawing_widget = DrawingWidget()
+        self.setCentralWidget(self.drawing_widget)
+
         self.create_menu()
-        self.ask_screen_saver()
-    
+
     def create_menu(self):
         toolbar = QToolBar("Shapes")
         self.addToolBar(toolbar)
+
         shapes = list(shape_map.keys())
         for shape in shapes:
             action = QAction(shape, self)
-            action.triggered.connect(lambda checked, s=shape: self.select_shape(s))
+            action.triggered.connect(lambda _, s=shape: self.select_shape_normal_mode(s))
             toolbar.addAction(action)
+
+        screensaver_action = QAction("Start Screen Saver", self)
+        screensaver_action.triggered.connect(self.ask_screen_saver)
+        toolbar.addAction(screensaver_action)
+
         exit_action = QAction("Exit", self)
         exit_action.triggered.connect(QApplication.instance().quit)
         toolbar.addAction(exit_action)
-    
-    def select_shape(self, shape):
+
+    def select_shape_normal_mode(self, shape):
         color = self.select_color()
-        if color:
-            speed = self.select_speed()
-            if speed:
-                self.enter_screen_saver_mode(shape, speed, color)
-    
+        if not color:
+            return
+        speed = self.select_speed()
+        if not speed:
+            return
+        self.drawing_widget.load_shape(shape)
+        self.drawing_widget.set_color(color)
+        self.drawing_widget.set_speed(speed)
+
     def ask_screen_saver(self):
-        answer = QMessageBox.question(self, "Screen Saver", "Do you want to enter screen saver mode?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        answer = QMessageBox.question(
+            self,
+            "Screen Saver",
+            "Do you want to enter screen saver mode?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
         if answer == QMessageBox.Yes:
-            self.ask_shape()
-    
-    def ask_shape(self):
+            self.ask_shape_for_screensaver()
+
+    def ask_shape_for_screensaver(self):
         shapes = list(shape_map.keys())
-        shape, ok = QInputDialog.getItem(self, "Select Shape", "Which shape do you want?", shapes, 0, False)
+        shape, ok = QInputDialog.getItem(
+            self, "Select Shape", "Which shape do you want?", shapes, 0, False
+        )
         if ok and shape:
             color = self.select_color()
             if color:
                 speed = self.select_speed()
                 if speed:
                     self.enter_screen_saver_mode(shape, speed, color)
-    
-    def select_speed(self):
-        speeds = ["Fast", "Normal", "Slow"]
-        speed_map = {"Fast": 5, "Normal": 20, "Slow": 50}
-        speed, ok = QInputDialog.getItem(self, "Select Speed", "Choose animation speed:", speeds, 1, False)
-        if ok and speed:
-            return speed_map[speed]
-        return None
-    
-    def select_color(self):
-        colors = ["Red", "Green", "Blue", "Yellow", "Cyan", "Magenta", "White"]
-        color_map = {
-            "Red": QColor(255, 0, 0),
-            "Green": QColor(0, 255, 0),
-            "Blue": QColor(0, 0, 255),
-            "Yellow": QColor(255, 255, 0),
-            "Cyan": QColor(0, 255, 255),
-            "Magenta": QColor(255, 0, 255),
-            "White": QColor(255, 255, 255)
-        }
-        color, ok = QInputDialog.getItem(self, "Select Color", "Choose drawing color:", colors, 0, False)
-        if ok and color:
-            return color_map[color]
-        return None
-    
+
     def enter_screen_saver_mode(self, shape, speed, color):
         app = QApplication.instance()
         screens = app.screens()
@@ -331,13 +368,49 @@ class MainWindow(QMainWindow):
             self.screen_saver_windows.append(window)
         if self.screen_saver_windows:
             self.hide()
-    
+
     def exit_screen_saver_mode(self):
         for window in self.screen_saver_windows:
             window.close()
         self.screen_saver_windows = []
         self.showNormal()
-    
+
+    def select_speed(self):
+        speeds = ["Fast", "Normal", "Slow"]
+        speed_map = {"Fast": 5, "Normal": 20, "Slow": 50}
+        speed, ok = QInputDialog.getItem(
+            self, "Select Speed", "Choose animation speed:", speeds, 1, False
+        )
+        if ok and speed:
+            return speed_map[speed]
+        return None
+
+    def select_color(self):
+        colors = [
+            "Red", "Green", "Blue", "Yellow", "Cyan", "Magenta", "White",
+            "Orange", "Purple", "Pink", "Gray", "Black"
+        ]
+        color_map = {
+            "Red": QColor(255, 0, 0),
+            "Green": QColor(0, 255, 0),
+            "Blue": QColor(0, 0, 255),
+            "Yellow": QColor(255, 255, 0),
+            "Cyan": QColor(0, 255, 255),
+            "Magenta": QColor(255, 0, 255),
+            "White": QColor(255, 255, 255),
+            "Orange": QColor(255, 165, 0),
+            "Purple": QColor(128, 0, 128),
+            "Pink": QColor(255, 192, 203),
+            "Gray": QColor(128, 128, 128),
+            "Black": QColor(0, 0, 0)
+        }
+        color, ok = QInputDialog.getItem(
+            self, "Select Color", "Choose drawing color:", colors, 0, False
+        )
+        if ok and color:
+            return color_map[color]
+        return None
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_U and self.screen_saver_windows:
             self.exit_screen_saver_mode()
